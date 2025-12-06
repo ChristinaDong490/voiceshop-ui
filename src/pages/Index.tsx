@@ -52,21 +52,8 @@ const Index = () => {
   const [voiceStatus, setVoiceStatus] = useState<VoiceStatus>("idle");
   const [isConnected] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      role: "user",
-      content: "Recommend an eco-friendly stainless-steel cleaner under fifteen dollars.",
-      timestamp: new Date(),
-    },
-    {
-      id: "2",
-      role: "assistant",
-      content: "Here are three options that fit your budget and material. My top pick is Brand X Steel-Safe Eco Cleaner—plant-based surfactants, 4.6★ average rating, typically $12.49. I compared this with two alternatives. I've sent details and sources to your screen. Would you like the most affordable or the highest rated?",
-      timestamp: new Date(),
-    },
-  ]);
-  const [showProducts] = useState(true);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [showProducts, setShowProducts] = useState(false);
   const [cartCount, setCartCount] = useState(0);
 
   const handleVoiceClick = useCallback(() => {
@@ -74,12 +61,11 @@ const Index = () => {
       setVoiceStatus("listening");
       setTimeout(() => {
         setVoiceStatus("processing");
-        setMessages((prev) => [
-          ...prev,
+        setMessages([
           {
-            id: Date.now().toString(),
+            id: "1",
             role: "user",
-            content: "Show me the most affordable option",
+            content: "Recommend an eco-friendly stainless-steel cleaner under fifteen dollars.",
             timestamp: new Date(),
           },
         ]);
@@ -90,12 +76,13 @@ const Index = () => {
         setMessages((prev) => [
           ...prev,
           {
-            id: (Date.now() + 1).toString(),
+            id: "2",
             role: "assistant",
-            content: "The most affordable is GreenShine Stainless Polish by EcoHome at $9.99. It has a 4.3★ rating and uses coconut oil derivatives. Would you like me to add it to your cart?",
+            content: "Here are three options that fit your budget and material. My top pick is Brand X Steel-Safe Eco Cleaner—plant-based surfactants, 4.6★ average rating, typically $12.49. I compared this with two alternatives. I've sent details and sources to your screen. Would you like the most affordable or the highest rated?",
             timestamp: new Date(),
           },
         ]);
+        setShowProducts(true);
       }, 3500);
 
       setTimeout(() => {
