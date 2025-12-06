@@ -2,55 +2,48 @@ import { useState, useCallback } from "react";
 import Header from "@/components/Header";
 import VoiceButton, { VoiceStatus } from "@/components/VoiceButton";
 import ConversationPanel, { Message } from "@/components/ConversationPanel";
-import ProductCard, { Product } from "@/components/ProductCard";
+import ProductComparisonTable, { ComparisonProduct } from "@/components/ProductComparisonTable";
 import StatusIndicator from "@/components/StatusIndicator";
 import SuggestedPrompts from "@/components/SuggestedPrompts";
 import { useToast } from "@/hooks/use-toast";
 
-// Sample products data
-const sampleProducts: Product[] = [
+// Eco-friendly cleaner comparison data
+const ecoCleanerProducts: ComparisonProduct[] = [
   {
     id: "1",
-    name: "Premium Wireless Noise-Canceling Headphones",
-    price: 249.99,
-    originalPrice: 349.99,
-    rating: 4.8,
-    reviews: 2847,
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop",
-    category: "Electronics",
-    inStock: true,
+    name: "Steel-Safe Eco Cleaner",
+    brand: "Brand X",
+    price: 12.49,
+    rating: 4.6,
+    reviews: 1847,
+    ingredients: "Plant-based surfactants, citric acid",
+    sourceType: "doc",
+    sourceLabel: "Product Spec #2847",
+    isTopPick: true,
   },
   {
     id: "2",
-    name: "Smart Fitness Watch with Heart Rate Monitor",
-    price: 199.99,
-    originalPrice: 279.99,
-    rating: 4.6,
-    reviews: 1523,
-    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop",
-    category: "Wearables",
-    inStock: true,
+    name: "GreenShine Stainless Polish",
+    brand: "EcoHome",
+    price: 9.99,
+    rating: 4.3,
+    reviews: 923,
+    ingredients: "Coconut oil derivatives, aloe vera",
+    sourceType: "link",
+    sourceLabel: "Amazon",
+    sourceUrl: "#",
   },
   {
     id: "3",
-    name: "Minimalist Leather Crossbody Bag",
-    price: 89.99,
-    rating: 4.9,
-    reviews: 892,
-    image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&h=400&fit=crop",
-    category: "Fashion",
-    inStock: true,
-  },
-  {
-    id: "4",
-    name: "Portable Bluetooth Speaker Waterproof",
-    price: 79.99,
-    originalPrice: 99.99,
-    rating: 4.5,
-    reviews: 3201,
-    image: "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400&h=400&fit=crop",
-    category: "Electronics",
-    inStock: false,
+    name: "Nature's Steel Cleaner",
+    brand: "PureClean",
+    price: 14.99,
+    rating: 4.7,
+    reviews: 2156,
+    ingredients: "Essential oils, plant enzymes",
+    sourceType: "link",
+    sourceLabel: "Target",
+    sourceUrl: "#",
   },
 ];
 
@@ -59,14 +52,26 @@ const Index = () => {
   const [voiceStatus, setVoiceStatus] = useState<VoiceStatus>("idle");
   const [isConnected] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [showProducts, setShowProducts] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: "1",
+      role: "user",
+      content: "Recommend an eco-friendly stainless-steel cleaner under fifteen dollars.",
+      timestamp: new Date(),
+    },
+    {
+      id: "2",
+      role: "assistant",
+      content: "Here are three options that fit your budget and material. My top pick is Brand X Steel-Safe Eco Cleaner—plant-based surfactants, 4.6★ average rating, typically $12.49. I compared this with two alternatives. I've sent details and sources to your screen. Would you like the most affordable or the highest rated?",
+      timestamp: new Date(),
+    },
+  ]);
+  const [showProducts] = useState(true);
   const [cartCount, setCartCount] = useState(0);
 
   const handleVoiceClick = useCallback(() => {
     if (voiceStatus === "idle") {
       setVoiceStatus("listening");
-      // Simulate voice interaction
       setTimeout(() => {
         setVoiceStatus("processing");
         setMessages((prev) => [
@@ -74,7 +79,7 @@ const Index = () => {
           {
             id: Date.now().toString(),
             role: "user",
-            content: "Show me some trending products",
+            content: "Show me the most affordable option",
             timestamp: new Date(),
           },
         ]);
@@ -87,12 +92,10 @@ const Index = () => {
           {
             id: (Date.now() + 1).toString(),
             role: "assistant",
-            content:
-              "I found some great trending products for you! Here are our top picks including premium headphones, smart watches, and more. Would you like me to filter by category or price range?",
+            content: "The most affordable is GreenShine Stainless Polish by EcoHome at $9.99. It has a 4.3★ rating and uses coconut oil derivatives. Would you like me to add it to your cart?",
             timestamp: new Date(),
           },
         ]);
-        setShowProducts(true);
       }, 3500);
 
       setTimeout(() => {
@@ -126,7 +129,7 @@ const Index = () => {
           timestamp: new Date(),
         },
       ]);
-      setShowProducts(true);
+      // Products already showing
     }, 1500);
 
     setTimeout(() => {
@@ -134,18 +137,11 @@ const Index = () => {
     }, 3000);
   };
 
-  const handleAddToCart = (product: Product) => {
+  const handleSelectProduct = (product: ComparisonProduct) => {
     setCartCount((prev) => prev + 1);
     toast({
       title: "Added to cart",
-      description: `${product.name} has been added to your cart.`,
-    });
-  };
-
-  const handleFavorite = (product: Product) => {
-    toast({
-      title: "Added to favorites",
-      description: `${product.name} has been saved to your wishlist.`,
+      description: `${product.name} by ${product.brand} has been added to your cart.`,
     });
   };
 
@@ -193,32 +189,33 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Right Panel - Product Recommendations */}
+          {/* Right Panel - Product Comparison */}
           <div className="flex flex-col">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-foreground">
-                {showProducts ? "Recommendations" : "Popular Today"}
+                Top 3 Eco-Friendly Cleaners
               </h2>
-              <button className="text-sm text-primary font-medium hover:underline">
-                View All
-              </button>
+              <span className="text-xs text-muted-foreground">Under $15</span>
             </div>
 
-            {/* Products grid */}
-            <div className="grid sm:grid-cols-2 gap-4">
-              {sampleProducts.map((product, index) => (
-                <div
-                  key={product.id}
-                  className="animate-in fade-in slide-in-from-bottom-4"
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  <ProductCard
-                    product={product}
-                    onAddToCart={handleAddToCart}
-                    onFavorite={handleFavorite}
-                  />
-                </div>
-              ))}
+            {/* Comparison Table */}
+            {showProducts && (
+              <div className="animate-in fade-in slide-in-from-bottom-4">
+                <ProductComparisonTable
+                  products={ecoCleanerProducts}
+                  onSelectProduct={handleSelectProduct}
+                />
+              </div>
+            )}
+
+            {/* Quick action buttons */}
+            <div className="mt-6 flex gap-3">
+              <button className="flex-1 py-3 px-4 rounded-xl glass border border-border/50 text-sm font-medium text-foreground hover:bg-secondary/50 transition-colors">
+                Most Affordable
+              </button>
+              <button className="flex-1 py-3 px-4 rounded-xl gradient-primary text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity">
+                Highest Rated
+              </button>
             </div>
 
             {/* Feature highlights */}
