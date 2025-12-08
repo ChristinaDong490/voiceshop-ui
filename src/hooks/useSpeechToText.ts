@@ -1,29 +1,29 @@
 import { useState, useCallback } from "react";
 import { useAudioRecorder } from "./useAudioRecorder";
 
-interface UseSpeechToTextReturn {
+interface UseVoiceAssistantReturn {
   isRecording: boolean;
   isProcessing: boolean;
-  transcribedText: string | null;
+  isPlaying: boolean;
   error: string | null;
   startRecording: () => Promise<void>;
-  stopAndTranscribe: () => Promise<string | null>;
+  stopAndPlay: () => Promise<void>;
 }
 
-export const useSpeechToText = (): UseSpeechToTextReturn => {
+export const useVoiceAssistant = (): UseVoiceAssistantReturn => {
   const { isRecording, startRecording, stopRecording, error: recorderError } = useAudioRecorder();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [transcribedText, setTranscribedText] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const stopAndTranscribe = useCallback(async (): Promise<string | null> => {
+  const stopAndPlay = useCallback(async (): Promise<void> => {
     setError(null);
     
     const audioBlob = await stopRecording();
     
     if (!audioBlob) {
       setError("No audio recorded");
-      return null;
+      return;
     }
 
     setIsProcessing(true);
@@ -38,20 +38,32 @@ export const useSpeechToText = (): UseSpeechToTextReturn => {
       });
 
       if (!response.ok) {
-        throw new Error(`ASR request failed: ${response.status}`);
+        throw new Error(`Voice request failed: ${response.status}`);
       }
 
-      const data = await response.json();
-      const text = data.text || "";
+      const mp3Blob = await response.blob();
+      const audioUrl = URL.createObjectURL(mp3Blob);
+      const audio = new Audio(audioUrl);
       
-      setTranscribedText(text);
-      return text;
+      setIsProcessing(false);
+      setIsPlaying(true);
+      
+      audio.onended = () => {
+        setIsPlaying(false);
+        URL.revokeObjectURL(audioUrl);
+      };
+      
+      audio.onerror = () => {
+        setIsPlaying(false);
+        setError("Failed to play audio");
+        URL.revokeObjectURL(audioUrl);
+      };
+      
+      await audio.play();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Transcription failed";
+      const errorMessage = err instanceof Error ? err.message : "Voice request failed";
       setError(errorMessage);
-      console.error("Transcription error:", err);
-      return null;
-    } finally {
+      console.error("Voice error:", err);
       setIsProcessing(false);
     }
   }, [stopRecording]);
@@ -59,9 +71,9 @@ export const useSpeechToText = (): UseSpeechToTextReturn => {
   return {
     isRecording,
     isProcessing,
-    transcribedText,
+    isPlaying,
     error: error || recorderError,
     startRecording,
-    stopAndTranscribe,
+    stopAndPlay,
   };
 };
