@@ -1,13 +1,19 @@
 import { useState, useCallback } from "react";
 import { useAudioRecorder } from "./useAudioRecorder";
 
+interface VoiceResponse {
+  transcript: string;
+  answer: string;
+}
+
 interface UseVoiceAssistantReturn {
   isRecording: boolean;
   isProcessing: boolean;
   isPlaying: boolean;
   error: string | null;
+  lastResponse: VoiceResponse | null;
   startRecording: () => Promise<void>;
-  stopAndPlay: () => Promise<void>;
+  stopAndPlay: () => Promise<VoiceResponse | null>;
 }
 
 export const useVoiceAssistant = (): UseVoiceAssistantReturn => {
@@ -15,15 +21,16 @@ export const useVoiceAssistant = (): UseVoiceAssistantReturn => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastResponse, setLastResponse] = useState<VoiceResponse | null>(null);
 
-  const stopAndPlay = useCallback(async (): Promise<void> => {
+  const stopAndPlay = useCallback(async (): Promise<VoiceResponse | null> => {
     setError(null);
     
     const audioBlob = await stopRecording();
     
     if (!audioBlob) {
       setError("No audio recorded");
-      return;
+      return null;
     }
 
     setIsProcessing(true);
@@ -41,7 +48,20 @@ export const useVoiceAssistant = (): UseVoiceAssistantReturn => {
         throw new Error(`Voice request failed: ${response.status}`);
       }
 
-      const mp3Blob = await response.blob();
+      const data = await response.json();
+      const { transcript, answer, audio_base64 } = data;
+
+      // Store the response
+      const voiceResponse: VoiceResponse = { transcript, answer };
+      setLastResponse(voiceResponse);
+
+      // Convert base64 to audio and play
+      const binaryString = atob(audio_base64);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const mp3Blob = new Blob([bytes], { type: "audio/mpeg" });
       const audioUrl = URL.createObjectURL(mp3Blob);
       const audio = new Audio(audioUrl);
       
@@ -60,11 +80,13 @@ export const useVoiceAssistant = (): UseVoiceAssistantReturn => {
       };
       
       await audio.play();
+      return voiceResponse;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Voice request failed";
       setError(errorMessage);
       console.error("Voice error:", err);
       setIsProcessing(false);
+      return null;
     }
   }, [stopRecording]);
 
@@ -73,6 +95,7 @@ export const useVoiceAssistant = (): UseVoiceAssistantReturn => {
     isProcessing,
     isPlaying,
     error: error || recorderError,
+    lastResponse,
     startRecording,
     stopAndPlay,
   };
