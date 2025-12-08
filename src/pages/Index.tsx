@@ -88,10 +88,34 @@ const Index = () => {
       await startRecording();
     } else if (voiceStatus === "listening") {
       // Stop recording and send to backend, play response
-      await stopAndPlay();
+      const response = await stopAndPlay();
       
-      // Show products after voice interaction
-      setShowProducts(true);
+      if (response) {
+        // Add user message with transcript
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now().toString(),
+            role: "user",
+            content: response.transcript,
+            timestamp: new Date(),
+          },
+        ]);
+
+        // Add assistant message with answer
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: (Date.now() + 1).toString(),
+            role: "assistant",
+            content: response.answer,
+            timestamp: new Date(),
+          },
+        ]);
+
+        // Show products after voice interaction
+        setShowProducts(true);
+      }
     } else {
       // Cancel/stop any ongoing process
       setVoiceStatus("idle");
