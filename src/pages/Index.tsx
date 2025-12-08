@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Header from "@/components/Header";
 import VoiceButton, { VoiceStatus } from "@/components/VoiceButton";
 import ConversationPanel, { Message } from "@/components/ConversationPanel";
@@ -6,6 +6,7 @@ import ProductComparisonTable, { ComparisonProduct } from "@/components/ProductC
 import StatusIndicator from "@/components/StatusIndicator";
 import SuggestedPrompts from "@/components/SuggestedPrompts";
 import { useToast } from "@/hooks/use-toast";
+import { useSpeechToText } from "@/hooks/useSpeechToText";
 
 // Eco-friendly cleaner comparison data
 const ecoCleanerProducts: ComparisonProduct[] = [
@@ -49,6 +50,7 @@ const ecoCleanerProducts: ComparisonProduct[] = [
 
 const Index = () => {
   const { toast } = useToast();
+  const { isRecording, isProcessing, startRecording, stopAndTranscribe, error } = useSpeechToText();
   const [voiceStatus, setVoiceStatus] = useState<VoiceStatus>("idle");
   const [isConnected] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
@@ -56,42 +58,69 @@ const Index = () => {
   const [showProducts, setShowProducts] = useState(false);
   const [cartCount, setCartCount] = useState(0);
 
-  const handleVoiceClick = useCallback(() => {
-    if (voiceStatus === "idle") {
+  // Sync voice status with recording/processing state
+  useEffect(() => {
+    if (isRecording) {
       setVoiceStatus("listening");
-      setTimeout(() => {
-        setVoiceStatus("processing");
-        setMessages([
-          {
-            id: "1",
-            role: "user",
-            content: "Recommend an eco-friendly stainless-steel cleaner under fifteen dollars.",
-            timestamp: new Date(),
-          },
-        ]);
-      }, 2000);
+    } else if (isProcessing) {
+      setVoiceStatus("processing");
+    }
+  }, [isRecording, isProcessing]);
 
-      setTimeout(() => {
-        setVoiceStatus("speaking");
+  // Show error toast
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Error",
+        description: error,
+        variant: "destructive",
+      });
+    }
+  }, [error, toast]);
+
+  const handleVoiceClick = useCallback(async () => {
+    if (voiceStatus === "idle") {
+      // Start recording
+      await startRecording();
+    } else if (voiceStatus === "listening") {
+      // Stop recording and transcribe
+      const text = await stopAndTranscribe();
+      
+      if (text) {
+        // Add user message with transcribed text
         setMessages((prev) => [
           ...prev,
           {
-            id: "2",
-            role: "assistant",
-            content: "Here are three options that fit your budget and material. My top pick is Brand X Steel-Safe Eco Cleaner—plant-based surfactants, 4.6★ average rating, typically $12.49. I compared this with two alternatives. I've sent details and sources to your screen. Would you like the most affordable or the highest rated?",
+            id: Date.now().toString(),
+            role: "user",
+            content: text,
             timestamp: new Date(),
           },
         ]);
-        setShowProducts(true);
-      }, 3500);
 
-      setTimeout(() => {
+        // Simulate assistant response (replace with actual API call later)
+        setVoiceStatus("speaking");
+        setTimeout(() => {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: (Date.now() + 1).toString(),
+              role: "assistant",
+              content: "Here are three options that fit your budget and material. My top pick is Brand X Steel-Safe Eco Cleaner—plant-based surfactants, 4.6★ average rating, typically $12.49. I compared this with two alternatives. I've sent details and sources to your screen. Would you like the most affordable or the highest rated?",
+              timestamp: new Date(),
+            },
+          ]);
+          setShowProducts(true);
+          setVoiceStatus("idle");
+        }, 1500);
+      } else {
         setVoiceStatus("idle");
-      }, 6000);
+      }
     } else {
+      // Cancel/stop any ongoing process
       setVoiceStatus("idle");
     }
-  }, [voiceStatus]);
+  }, [voiceStatus, startRecording, stopAndTranscribe]);
 
   const handlePromptSelect = (prompt: string) => {
     setMessages((prev) => [
