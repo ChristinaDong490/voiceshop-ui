@@ -6,7 +6,7 @@ import ProductComparisonTable, { ComparisonProduct } from "@/components/ProductC
 import StatusIndicator from "@/components/StatusIndicator";
 import SuggestedPrompts from "@/components/SuggestedPrompts";
 import { useToast } from "@/hooks/use-toast";
-import { useSpeechToText } from "@/hooks/useSpeechToText";
+import { useVoiceAssistant } from "@/hooks/useSpeechToText";
 
 // Eco-friendly cleaner comparison data
 const ecoCleanerProducts: ComparisonProduct[] = [
@@ -50,7 +50,7 @@ const ecoCleanerProducts: ComparisonProduct[] = [
 
 const Index = () => {
   const { toast } = useToast();
-  const { isRecording, isProcessing, startRecording, stopAndTranscribe, error } = useSpeechToText();
+  const { isRecording, isProcessing, isPlaying, startRecording, stopAndPlay, error } = useVoiceAssistant();
   const [voiceStatus, setVoiceStatus] = useState<VoiceStatus>("idle");
   const [isConnected] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
@@ -58,14 +58,18 @@ const Index = () => {
   const [showProducts, setShowProducts] = useState(false);
   const [cartCount, setCartCount] = useState(0);
 
-  // Sync voice status with recording/processing state
+  // Sync voice status with recording/processing/playing state
   useEffect(() => {
     if (isRecording) {
       setVoiceStatus("listening");
     } else if (isProcessing) {
       setVoiceStatus("processing");
+    } else if (isPlaying) {
+      setVoiceStatus("speaking");
+    } else {
+      setVoiceStatus("idle");
     }
-  }, [isRecording, isProcessing]);
+  }, [isRecording, isProcessing, isPlaying]);
 
   // Show error toast
   useEffect(() => {
@@ -83,44 +87,16 @@ const Index = () => {
       // Start recording
       await startRecording();
     } else if (voiceStatus === "listening") {
-      // Stop recording and transcribe
-      const text = await stopAndTranscribe();
+      // Stop recording and send to backend, play response
+      await stopAndPlay();
       
-      if (text) {
-        // Add user message with transcribed text
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: Date.now().toString(),
-            role: "user",
-            content: text,
-            timestamp: new Date(),
-          },
-        ]);
-
-        // Simulate assistant response (replace with actual API call later)
-        setVoiceStatus("speaking");
-        setTimeout(() => {
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: (Date.now() + 1).toString(),
-              role: "assistant",
-              content: "Here are three options that fit your budget and material. My top pick is Brand X Steel-Safe Eco Cleaner—plant-based surfactants, 4.6★ average rating, typically $12.49. I compared this with two alternatives. I've sent details and sources to your screen. Would you like the most affordable or the highest rated?",
-              timestamp: new Date(),
-            },
-          ]);
-          setShowProducts(true);
-          setVoiceStatus("idle");
-        }, 1500);
-      } else {
-        setVoiceStatus("idle");
-      }
+      // Show products after voice interaction
+      setShowProducts(true);
     } else {
       // Cancel/stop any ongoing process
       setVoiceStatus("idle");
     }
-  }, [voiceStatus, startRecording, stopAndTranscribe]);
+  }, [voiceStatus, startRecording, stopAndPlay]);
 
   const handlePromptSelect = (prompt: string) => {
     setMessages((prev) => [
