@@ -32,7 +32,7 @@ export const useSpeechToText = (): UseSpeechToTextReturn => {
       const formData = new FormData();
       formData.append("file", audioBlob, "recording.webm");
 
-      const response = await fetch("/api/asr", {
+      const response = await fetch("/api/voice", {
         method: "POST",
         body: formData,
       });
