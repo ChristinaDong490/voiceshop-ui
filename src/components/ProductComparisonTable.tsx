@@ -37,9 +37,6 @@ const ProductComparisonTable = ({ products, onSelectProduct }: ProductComparison
                 Rating
               </th>
               <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">
-                Key Ingredients
-              </th>
-              <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">
                 Source
               </th>
             </tr>
@@ -93,11 +90,6 @@ const ProductComparisonTable = ({ products, onSelectProduct }: ProductComparison
                       ({product.reviews.toLocaleString()})
                     </span>
                   </div>
-                </td>
-                <td className="px-4 py-4">
-                  <span className="text-xs text-muted-foreground">
-                    {product.ingredients}
-                  </span>
                 </td>
                 <td className="px-4 py-4">
                   <a
