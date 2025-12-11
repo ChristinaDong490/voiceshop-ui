@@ -185,9 +185,8 @@ const Index = () => {
           <div className="flex flex-col">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-foreground">
-                Top 3 Eco-Friendly Cleaners
+                Top Products Recommendation
               </h2>
-              <span className="text-xs text-muted-foreground">Under $15</span>
             </div>
 
             {/* Comparison Table */}
@@ -200,15 +199,6 @@ const Index = () => {
               </div>
             )}
 
-            {/* Quick action buttons */}
-            <div className="mt-6 flex gap-3">
-              <button className="flex-1 py-3 px-4 rounded-xl glass border border-border/50 text-sm font-medium text-foreground hover:bg-secondary/50 transition-colors">
-                Most Affordable
-              </button>
-              <button className="flex-1 py-3 px-4 rounded-xl gradient-primary text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity">
-                Highest Rated
-              </button>
-            </div>
 
             {/* Feature highlights */}
             <div className="mt-8 grid grid-cols-3 gap-4">
