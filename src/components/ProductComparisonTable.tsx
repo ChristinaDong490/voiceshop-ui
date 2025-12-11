@@ -12,6 +12,7 @@ export interface ComparisonProduct {
   sourceLabel: string;
   sourceUrl?: string;
   isTopPick?: boolean;
+  imageUrl?: string;
 }
 
 interface ProductComparisonTableProps {
@@ -55,6 +56,13 @@ const ProductComparisonTable = ({ products, onSelectProduct }: ProductComparison
               >
                 <td className="px-4 py-4">
                   <div className="flex items-center gap-3">
+                    {product.imageUrl && (
+                      <img
+                        src={product.imageUrl}
+                        alt={product.name}
+                        className="w-12 h-12 object-cover rounded-lg bg-secondary"
+                      />
+                    )}
                     <div>
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-semibold text-foreground">
