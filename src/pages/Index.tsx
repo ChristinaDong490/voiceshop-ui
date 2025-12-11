@@ -158,7 +158,7 @@ const Index = () => {
             </div>
 
             {/* Conversation area */}
-            <div className="flex-1 glass rounded-2xl mb-6 min-h-[300px] max-h-[400px] overflow-hidden">
+            <div className="flex-1 glass rounded-2xl mb-6 min-h-[300px] max-h-[400px] overflow-y-auto">
               <ConversationPanel
                 messages={messages}
                 isLoading={voiceStatus === "processing"}
