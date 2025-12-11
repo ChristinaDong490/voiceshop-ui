@@ -1,9 +1,20 @@
 import { useState, useCallback } from "react";
 import { useAudioRecorder } from "./useAudioRecorder";
 
-interface VoiceResponse {
+interface BackendProduct {
+  id: string;
+  title: string;
+  price: number;
+  rating: number;
+  brand: string;
+  product_url: string;
+  image_url: string;
+}
+
+export interface VoiceResponse {
   transcript: string;
   answer: string;
+  products: BackendProduct[];
 }
 
 interface UseVoiceAssistantReturn {
@@ -49,10 +60,10 @@ export const useVoiceAssistant = (): UseVoiceAssistantReturn => {
       }
 
       const data = await response.json();
-      const { transcript, answer, audio_base64 } = data;
+      const { transcript, answer, audio_base64, products = [] } = data;
 
       // Store the response
-      const voiceResponse: VoiceResponse = { transcript, answer };
+      const voiceResponse: VoiceResponse = { transcript, answer, products };
       setLastResponse(voiceResponse);
 
       // Convert base64 to audio and play
