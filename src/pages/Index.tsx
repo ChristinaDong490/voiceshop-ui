@@ -8,46 +8,6 @@ import SuggestedPrompts from "@/components/SuggestedPrompts";
 import { useToast } from "@/hooks/use-toast";
 import { useVoiceAssistant } from "@/hooks/useSpeechToText";
 
-// Eco-friendly cleaner comparison data
-const ecoCleanerProducts: ComparisonProduct[] = [
-  {
-    id: "1",
-    name: "Steel-Safe Eco Cleaner",
-    brand: "Brand X",
-    price: 12.49,
-    rating: 4.6,
-    reviews: 1847,
-    ingredients: "Plant-based surfactants, citric acid",
-    sourceType: "doc",
-    sourceLabel: "Product Spec #2847",
-    isTopPick: true,
-  },
-  {
-    id: "2",
-    name: "GreenShine Stainless Polish",
-    brand: "EcoHome",
-    price: 9.99,
-    rating: 4.3,
-    reviews: 923,
-    ingredients: "Coconut oil derivatives, aloe vera",
-    sourceType: "link",
-    sourceLabel: "Amazon",
-    sourceUrl: "#",
-  },
-  {
-    id: "3",
-    name: "Nature's Steel Cleaner",
-    brand: "PureClean",
-    price: 14.99,
-    rating: 4.7,
-    reviews: 2156,
-    ingredients: "Essential oils, plant enzymes",
-    sourceType: "link",
-    sourceLabel: "Target",
-    sourceUrl: "#",
-  },
-];
-
 const Index = () => {
   const { toast } = useToast();
   const { isRecording, isProcessing, isPlaying, startRecording, stopAndPlay, error } = useVoiceAssistant();
@@ -55,7 +15,7 @@ const Index = () => {
   const [isConnected] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [showProducts, setShowProducts] = useState(false);
+  const [products, setProducts] = useState<ComparisonProduct[]>([]);
   const [cartCount, setCartCount] = useState(0);
 
   // Sync voice status with recording/processing/playing state
@@ -113,8 +73,23 @@ const Index = () => {
           },
         ]);
 
-        // Show products after voice interaction
-        setShowProducts(true);
+        // Map backend products to ComparisonProduct format
+        if (response.products && response.products.length > 0) {
+          const mappedProducts: ComparisonProduct[] = response.products.map((p, index) => ({
+            id: p.id,
+            name: p.title,
+            brand: p.brand || "Unknown",
+            price: p.price,
+            rating: p.rating >= 0 ? p.rating : 0,
+            reviews: 0,
+            ingredients: "",
+            sourceType: "link" as const,
+            sourceLabel: "View Product",
+            sourceUrl: p.product_url,
+            isTopPick: index === 0,
+          }));
+          setProducts(mappedProducts);
+        }
       }
     } else {
       // Cancel/stop any ongoing process
@@ -215,10 +190,10 @@ const Index = () => {
             </div>
 
             {/* Comparison Table */}
-            {showProducts && (
+            {products.length > 0 && (
               <div className="animate-in fade-in slide-in-from-bottom-4">
                 <ProductComparisonTable
-                  products={ecoCleanerProducts}
+                  products={products}
                   onSelectProduct={handleSelectProduct}
                 />
               </div>
