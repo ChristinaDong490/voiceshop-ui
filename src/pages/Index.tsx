@@ -87,6 +87,7 @@ const Index = () => {
             sourceLabel: "View Product",
             sourceUrl: p.product_url,
             isTopPick: index === 0,
+            imageUrl: p.image_url,
           }));
           setProducts(mappedProducts);
         }
