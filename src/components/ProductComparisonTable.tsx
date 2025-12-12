@@ -71,7 +71,7 @@ const ProductComparisonTable = ({ products, onSelectProduct }: ProductComparison
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground">{product.brand}</p>
+                      
                     </div>
                   </div>
                 </td>
